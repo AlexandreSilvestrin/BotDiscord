@@ -86,6 +86,4 @@ async def sair(interaction: discord.Interaction):
 
 
 # coloque o codigo do seu bot como parametro
-token2 = 'MTA0MjkwOTAwMTk3MDYxNDQ0NA.GQSsYK.M-0iMq28NJLCt7TvrP5nZn5c1vx3ANf9k8yAm4'
-token = 'OTYxNDUwOTgxNjE3NDM4NzUw.Gas6aY.xOHZ2pLCdU1Yz0kN_3gCn3ppbKi8UKHXMYhFaI'
-bot.run(token)
+bot.run('seu token aqui')
