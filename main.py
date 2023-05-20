@@ -1,12 +1,21 @@
-import time
 import discord
 from discord import app_commands, FFmpegPCMAudio
+import os
 
-token_bot = 'Seu token aqui'
+token_bot = 'seu codigo aqui'
+
+
+def listmusicas():
+    lista = []
+    pasta = r'C:\Users\Alexandre\Documents\Programacao\Python\Ale\discord BOT\BOT musica\Musicas3'
+    for diretorio, subpastas, arquivos in os.walk(pasta):
+        for arquivo in arquivos:
+            lista.append(arquivo)
+    return lista, pasta
 
 
 class Menu(discord.ui.View):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(timeout=None)
         self.musica = None
         self.value = None
@@ -15,6 +24,7 @@ class Menu(discord.ui.View):
         self.embed = None
         self.msgID = None
         self.inte = None
+        self.lista, self.pasta = listmusicas()
 
     def pegarmusica(self, music, lista):
         self.listM = lista
@@ -23,30 +33,11 @@ class Menu(discord.ui.View):
 
     def proxima(self, lista, index, voice):
         tamanho = len(self.listM) - 1
-        if index + 1 > tamanho:
-            index = 0
-            music = lista[index]
-        else:
-            index += 1
-            music = lista[index]
+        index = (index + 1) % (tamanho + 1)
+        music = lista[index]
         self.musica, self.listM, self.index = music, lista, index
         voice.pause()
         self.tocarMusica(voice, self.musica)
-
-    async def voltar(self, lista, index, voice):
-        tamanho = len(self.listM) - 1
-        if index - 1 < 0:
-            index = tamanho
-            music = lista[index]
-            self.musica, self.listM, self.index = music, lista, index
-            voice.pause()
-            self.tocarMusica(voice, self.musica)
-        else:
-            index -= 1
-            music = lista[index]
-            self.musica, self.listM, self.index = music, lista, index
-            voice.pause()
-            self.tocarMusica(voice, self.musica)
 
     def criaEmbed(self, cor, descricao, musica):
         if cor == 'verde':
@@ -56,8 +47,17 @@ class Menu(discord.ui.View):
         elif cor == 'gold':
             self.embed = discord.Embed(color=discord.Color.gold(), title=musica)
             self.embed.add_field(name=descricao, value='tetste', inline=True)
-        self.embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/556189304997543938/1064355905753325568/image.png")
+        self.embed.set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/556189304997543938/1064355905753325568/image.png")
         return self.embed
+
+    async def voltar(self, lista, index, voice):
+        tamanho = len(self.listM)
+        index = (index - 1) % tamanho
+        music = lista[index]
+        self.musica, self.listM, self.index = music, lista, index
+        voice.pause()
+        self.tocarMusica(voice, self.musica)
 
     async def verificar(self, botao, voice, interaction=None):
         if botao == 'play':
@@ -90,7 +90,8 @@ class Menu(discord.ui.View):
                 self.tocarMusica(voice, 'palmas.m4a')
 
     def tocarMusica(self, voice, music):
-        source = FFmpegPCMAudio('Musicas/'+music)
+        local = f'C:/Users/Alexandre/Documents/Programacao/Python/Ale/discord BOT/BOT musica/Musicas3/{music}'
+        source = FFmpegPCMAudio(local, executable='ffmpeg.exe')
         voice.play(source, after=lambda x: Menu.proxima(self, self.listM, self.index, voice))
 
     @discord.ui.button(emoji='⏯')
@@ -141,37 +142,37 @@ aclient = client()
 tree = app_commands.CommandTree(aclient)
 
 
-def listmusicas():
-    musicas = ['Lista com nome das musicas aqui']
-
-    return musicas
-
-
 @tree.command(name='tocar', description='Setup')
 @app_commands.describe(nome_musica="musica")
 async def tocar(interaction: discord.Interaction, nome_musica: str):
     if interaction.user.voice:
         menu = Menu()
-        menu.pegarmusica(music=nome_musica, lista=listmusicas())
+        lista, pasta = listmusicas()
+        menu.pegarmusica(music=nome_musica, lista=lista)
         channel = interaction.user.voice.channel
         embed = menu.criaEmbed(cor='verde', descricao='Tocando', musica=nome_musica)
         if not interaction.guild.voice_client:
+            await interaction.response.send_message(view=menu, embed=embed)
             voice = await channel.connect()
             menu.tocarMusica(voice, nome_musica)
-            await interaction.response.send_message(view=menu, embed=embed)
         else:
+            messages = [message async for message in interaction.channel.history(limit=1)]
+            for msg in messages:
+                msgg = msg.id
             voice = interaction.guild.voice_client
             voice.pause()
             menu.tocarMusica(voice, nome_musica)
-            await interaction.response.edit_message(embed=embed)
+            await interaction.response.edit_message(message_id=msgg, embed=embed)
     else:
-        await interaction.response.send_message('Voce nao esta conectado em nenhuma call', delete_after=10, ephemeral=True)
+        await interaction.response.send_message('Voce nao esta conectado em nenhuma call', delete_after=10,
+                                                ephemeral=True)
 
 
 @tocar.autocomplete('nome_musica')
 async def musica_pc(interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-    musicas = listmusicas()
-    return [app_commands.Choice(name=nome_musica, value=nome_musica) for nome_musica in musicas[:14] if current.lower() in nome_musica.lower()]
+    musicas, pasta = listmusicas()
+    return [app_commands.Choice(name=nome_musica, value=nome_musica) for nome_musica in musicas[:14] if
+            current.lower() in nome_musica.lower()]
 
 
 aclient.run(token_bot)
