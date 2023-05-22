@@ -5,6 +5,7 @@ import os
 token_bot = 'seu codigo aqui'
 
 
+
 def listmusicas():
     lista = []
     pasta = r'C:\Users\Alexandre\Documents\Programacao\Python\Ale\discord BOT\BOT musica\Musicas3'
