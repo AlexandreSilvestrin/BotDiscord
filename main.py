@@ -2,8 +2,7 @@ import discord
 from discord import app_commands, FFmpegPCMAudio
 import os
 
-token_bot = 'seu codigo aqui'
-
+token_bot = 'seu Token aqui'
 
 
 def listmusicas():
