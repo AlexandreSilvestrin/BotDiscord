@@ -22,8 +22,6 @@ class Menu(discord.ui.View):
         self.listM = None
         self.index = None
         self.embed = None
-        self.msgID = None
-        self.inte = None
         self.lista, self.pasta = listmusicas()
 
     def pegarmusica(self, music, lista):
